@@ -1,5 +1,5 @@
-import axios from 'axios';
-import { LOCAL_API_BASE, API_ENDPOINTS } from '../constants/api.js';
+import { apiClient } from '../utils/apiClient.js';
+import { API_ENDPOINTS } from '../constants/api.js';
 import type {
     CreateGroupParams,
     UpdateGroupParams,
@@ -16,7 +16,7 @@ export const groupHandlers = {
             requestBody.remark = remark;
         }
 
-        const response = await axios.post(`${LOCAL_API_BASE}${API_ENDPOINTS.CREATE_GROUP}`, requestBody);
+        const response = await apiClient.post(API_ENDPOINTS.CREATE_GROUP, requestBody);
         
         if (response.data.code === 0) {
             return `Group created successfully with name: ${groupName}${remark ? `, remark: ${remark}` : ''}`;
@@ -34,7 +34,7 @@ export const groupHandlers = {
             requestBody.remark = remark;
         }
 
-        const response = await axios.post(`${LOCAL_API_BASE}${API_ENDPOINTS.UPDATE_GROUP}`, requestBody);
+        const response = await apiClient.post(API_ENDPOINTS.UPDATE_GROUP, requestBody);
         
         if (response.data.code === 0) {
             return `Group updated successfully with id: ${groupId}, name: ${groupName}${remark !== undefined ? `, remark: ${remark === null ? '(cleared)' : remark}` : ''}`;
@@ -54,7 +54,10 @@ export const groupHandlers = {
             params.set('page', page.toString());
         }
 
-        const response = await axios.get(`${LOCAL_API_BASE}${API_ENDPOINTS.GET_GROUP_LIST}`, { params });
-        return `Group list: ${JSON.stringify(response.data.data.list, null, 2)}`;
+        const response = await apiClient.get(API_ENDPOINTS.GET_GROUP_LIST, { params });
+        if (response.data.code === 0 && response.data.data) {
+            return `Group list: ${JSON.stringify(response.data.data.list || [], null, 2)}`;
+        }
+        throw new Error(`Failed to get group list: ${response.data.msg || 'Unknown error'}`);
     }
 }; 
